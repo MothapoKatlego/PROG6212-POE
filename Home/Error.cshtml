@@ -1,0 +1,65 @@
+﻿// Enhanced Global Error Handling in Program.cs
+app.UseExceptionHandler("/Home/Error");
+app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
+
+// Custom error pages
+public class ErrorController : Controller
+{
+    [Route("Error/{statusCode}")]
+    public IActionResult HttpStatusCodeHandler(int statusCode)
+    {
+        var errorViewModel = new ErrorViewModel
+        {
+            StatusCode = statusCode,
+            Message = statusCode switch
+            {
+                404 => "The page you're looking for doesn't exist.",
+                500 => "Internal server error occurred.",
+                _ => "An error occurred while processing your request."
+            }
+        };
+        return View("Error", errorViewModel);
+    }
+}
+
+// Enhanced controller error handling
+[HttpPost]
+public async Task<IActionResult>
+    Submit(SubmitClaimViewModel model)
+    {
+    try
+    {
+    if (!ModelState.IsValid)
+    {
+    var errors = ModelState.Values.SelectMany(v => v.Errors)
+    .Select(e => e.ErrorMessage)
+    .ToList();
+    TempData["ValidationErrors"] = errors;
+    return View(model);
+    }
+
+    // Business logic here
+    await _context.SaveChangesAsync();
+
+    TempData["Success"] = "Claim submitted successfully!";
+    return RedirectToAction("Dashboard");
+    }
+    catch (DbUpdateException ex)
+    {
+    _logger.LogError(ex, "Database error while submitting claim");
+    TempData["Error"] = "A database error occurred. Please try again.";
+    return View(model);
+    }
+    catch (IOException ex)
+    {
+    _logger.LogError(ex, "File upload error");
+    TempData["Error"] = "File upload failed. Please check file size and try again.";
+    return View(model);
+    }
+    catch (Exception ex)
+    {
+    _logger.LogError(ex, "Unexpected error in Submit action");
+    TempData["Error"] = "An unexpected error occurred. Please contact support.";
+    return View(model);
+    }
+    }
