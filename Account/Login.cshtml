@@ -1,0 +1,50 @@
+﻿@model LecturerPayrollApp.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h2><i class="fas fa-university me-2"></i>LecturerPayrollApp</h2>
+                    <p class="mb-0">Contract Monthly Claim System</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="Username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="Username" name="Username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="Password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="Password" name="Password" required>
+                        </div>
+
+                        @if (ViewData.ModelState.IsValid == false)
+                        {
+                            <div class="alert alert-danger">
+                                Invalid username or password.
+                            </div>
+                        }
+
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </button>
+                    </form>
+
+                    <div class="mt-4">
+                        <h6>Test Accounts:</h6>
+                        <div class="small">
+                            <div><strong>Lecturer:</strong> lecturer1 / password</div>
+                            <div><strong>Coordinator:</strong> coordinator1 / password</div>
+                            <div><strong>Manager:</strong> manager1 / password</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
