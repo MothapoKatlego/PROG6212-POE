@@ -1,0 +1,293 @@
+﻿@model IEnumerable<MonthlyClaim>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Enhanced Dashboard Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>@Model.Count()</h4>
+                                    <p>Total Pending</p>
+                                </div>
+                                <i class="fas fa-clipboard-list fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>@Model.Count(c => c.TotalAmount > 3000)</h4>
+                                    <p>High Value Claims</p>
+                                </div>
+                                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>@Model.Count(c => c.SubmittedDate.Date == DateTime.Today)</h4>
+                                    <p>Submitted Today</p>
+                                </div>
+                                <i class="fas fa-calendar-day fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>@Model.Count(c => c.Documents.Any())</h4>
+                                    <p>With Documents</p>
+                                </div>
+                                <i class="fas fa-file-alt fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Claims Table -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-clipboard-check me-2"></i>
+                        Claims for Review
+                        <span class="badge bg-dark ms-2">@Model.Count()</span>
+                    </h4>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-dark btn-sm" onclick="exportToExcel()">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                        <button class="btn btn-outline-dark btn-sm" onclick="printTable()">
+                            <i class="fas fa-print me-1"></i>Print
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Advanced Filtering -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search claims...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="amountFilter">
+                                <option value="">All Amounts</option>
+                                <option value="low">Under $2,000</option>
+                                <option value="medium">$2,000 - $4,000</option>
+                                <option value="high">Over $4,000</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="dateFilter">
+                                <option value="">All Dates</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                                <i class="fas fa-times me-1"></i>Clear Filters
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped" id="claimsTable">
+                            <thead class="table-warning">
+                                <tr>
+                                    <th>Claim ID</th>
+                                    <th>Lecturer</th>
+                                    <th>Department</th>
+                                    <th>Month</th>
+                                    <th>Amount</th>
+                                    <th>Submitted</th>
+                                    <th>Documents</th>
+                                    <th>Priority</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var claim in Model.OrderByDescending(c => c.TotalAmount))
+                                {
+                                    var priority = claim.TotalAmount > 4000 ? "high" :
+                                    claim.TotalAmount > 2000 ? "medium" : "low";
+                                    var daysPending = (DateTime.Now - claim.SubmittedDate).Days;
+
+                                    <tr class="claim-row" data-priority="@priority" data-amount="@claim.TotalAmount" data-days="@daysPending">
+                                        <td>
+                                            <strong>#@claim.Id</strong>
+                                            @if (daysPending > 7)
+                                            {
+                                                <span class="badge bg-danger ms-1" title="Overdue">!</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm bg-primary rounded-circle text-white d-flex align-items-center justify-content-center me-2">
+                                                    @(claim.Lecturer?.FirstName?[0])@(claim.Lecturer?.LastName?[0])
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold">@(claim.Lecturer?.FirstName ?? "Unknown") @(claim.Lecturer?.LastName ?? "Lecturer")</div>
+                                                    <small class="text-muted">@claim.Lecturer?.Username</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">Computer Science</span>
+                                        </td>
+                                        <td>@claim.ClaimMonth.ToString("MMM yyyy")</td>
+                                        <td>
+                                            <span class="fw-bold @(claim.TotalAmount > 4000 ? "text-danger" : "text-success")">
+                                                $@claim.TotalAmount.ToString("N2")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div>@claim.SubmittedDate.ToString("dd MMM yyyy")</div>
+                                            <small class="text-muted">@daysPending days ago</small>
+                                        </td>
+                                        <td>
+                                            @if (claim.Documents?.Any() == true)
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-file me-1"></i>@claim.Documents.Count
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning text-dark">No docs</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @{
+                                                var priorityBadge = priority switch
+                                                {
+                                                    "high" => "bg-danger",
+                                                    "medium" => "bg-warning",
+                                                    _ => "bg-info"
+                                                };
+                                                var priorityText = priority switch
+                                                {
+                                                    "high" => "High",
+                                                    "medium" => "Medium",
+                                                    _ => "Low"
+                                                };
+                                            }
+                                            <span class="badge @priorityBadge">@priorityText</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group-vertical btn-group-sm">
+                                                <a href="/Claims/Details/@claim.Id" class="btn btn-outline-info mb-1">
+                                                    <i class="fas fa-search me-1"></i>Review
+                                                </a>
+                                                <div class="btn-group">
+                                                    <form method="post" action="/Claims/ApproveAsCoordinator" class="d-inline">
+                                                        <input type="hidden" name="claimId" value="@claim.Id" />
+                                                        <input type="hidden" name="isApproved" value="true" />
+                                                        <button type="submit" class="btn btn-success btn-sm">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    </form>
+                                                    <form method="post" action="/Claims/ApproveAsCoordinator" class="d-inline">
+                                                        <input type="hidden" name="claimId" value="@claim.Id" />
+                                                        <input type="hidden" name="isApproved" value="false" />
+                                                        <button type="submit" class="btn btn-danger btn-sm">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State -->
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                            <h4 class="text-muted">All Caught Up!</h4>
+                            <p class="text-muted">No claims pending review at this time.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Enhanced filtering functionality
+        function filterTable() {
+            const search = $('#searchInput').val().toLowerCase();
+            const amountFilter = $('#amountFilter').val();
+            const dateFilter = $('#dateFilter').val();
+
+            $('.claim-row').each(function() {
+                const row = $(this);
+                const text = row.text().toLowerCase();
+                const amount = parseFloat(row.data('amount'));
+                const days = parseInt(row.data('days'));
+
+                let show = true;
+
+                // Search filter
+                if (search && !text.includes(search)) {
+                    show = false;
+                }
+
+                // Amount filter
+                if (amountFilter === 'low' && amount >= 2000) show = false;
+                if (amountFilter === 'medium' && (amount < 2000 || amount > 4000)) show = false;
+                if (amountFilter === 'high' && amount <= 4000) show = false;
+
+                // Date filter
+                if (dateFilter === 'today' && days > 0) show = false;
+                if (dateFilter === 'week' && days > 7) show = false;
+                if (dateFilter === 'month' && days > 30) show = false;
+
+                row.toggle(show);
+            });
+        }
+
+        $('#searchInput, #amountFilter, #dateFilter').on('input change', filterTable);
+
+        function clearFilters() {
+            $('#searchInput').val('');
+            $('#amountFilter').val('');
+            $('#dateFilter').val('');
+            filterTable();
+        }
+
+        function exportToExcel() {
+            // Implementation for Excel export
+            alert('Export functionality would be implemented here');
+        }
+
+        function printTable() {
+            window.print();
+        }
+
+        // Auto-refresh every 30 seconds for new claims
+        setInterval(() => {
+            // Could implement AJAX refresh here
+        }, 30000);
+    </script>
+}

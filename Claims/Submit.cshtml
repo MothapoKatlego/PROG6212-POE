@@ -1,0 +1,67 @@
+﻿@model LecturerPayrollApp.Models.SubmitClaimViewModel
+
+@{
+    ViewData["Title"] = "Submit New Claim";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h2 class="h4 mb-0"><i class="fas fa-plus-circle me-2"></i>Submit New Claim</h2>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form method="post" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="ClaimMonth" class="form-label">Claim Month *</label>
+                                <input type="month" class="form-control" id="ClaimMonth" name="ClaimMonth" required>
+                                <small class="form-text text-muted">Select the month you're claiming for</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="TotalAmount" class="form-label">Total Amount *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" step="0.01" class="form-control" id="TotalAmount" name="TotalAmount" required>
+                                </div>
+                                <small class="form-text text-muted">Enter the total claim amount</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Description" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" id="Description" name="Description" rows="3" placeholder="Add any additional notes about this claim..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Document" class="form-label">Supporting Document (Optional)</label>
+                            <input type="file" class="form-control" id="Document" name="Document" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                            <small class="form-text text-muted">Upload supporting documents (PDF, Word, Images)</small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Claim
+                            </button>
+                            <a href="/Claims/MyClaims" class="btn btn-outline-secondary">
+                                <i class="fas fa-list me-2"></i>View My Claims
+                            </a>
+                            <a href="/Claims/Dashboard" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,116 @@
+﻿@model IEnumerable<MonthlyClaim>
+
+@{
+    ViewData["Title"] = "Review Claims";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h2 class="h4 mb-0"><i class="fas fa-clipboard-check me-2"></i>Review Claims</h2>
+                    <a href="/Home" class="btn btn-outline-dark btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h4 class="text-muted">No Claims Pending Review</h4>
+                            <p class="text-muted">There are no claims waiting for your review at this time.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="table-warning">
+                                    <tr>
+                                        <th><i class="fas fa-user me-1"></i>Lecturer</th>
+                                        <th><i class="fas fa-calendar me-1"></i>Claim Month</th>
+                                        <th><i class="fas fa-dollar-sign me-1"></i>Amount</th>
+                                        <th><i class="fas fa-clock me-1"></i>Submitted Date</th>
+                                        <th><i class="fas fa-cogs me-1"></i>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var claim in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm bg-primary rounded-circle text-white d-flex align-items-center justify-content-center me-2">
+                                                        @claim.Lecturer?.FirstName?[0]@claim.Lecturer?.LastName?[0]
+                                                    </div>
+                                                    <div>
+                                                        <strong>@claim.Lecturer?.FirstName @claim.Lecturer?.LastName</strong>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>@claim.ClaimMonth.ToString("MMM yyyy")</td>
+                                            <td>
+                                                <span class="badge bg-success fs-6">$@claim.TotalAmount.ToString("N2")</span>
+                                            </td>
+                                            <td>@claim.SubmittedDate.ToString("MMM dd, yyyy")</td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <form method="post" action="@Url.Action("ApproveAsCoordinator")" class="d-inline">
+                                                        <input type="hidden" name="claimId" value="@claim.Id" />
+                                                        <input type="hidden" name="isApproved" value="true" />
+                                                        <button type="submit" class="btn btn-success btn-sm">
+                                                            <i class="fas fa-check me-1"></i>Approve
+                                                        </button>
+                                                    </form>
+                                                    <form method="post" action="@Url.Action("ApproveAsCoordinator")" class="d-inline">
+                                                        <input type="hidden" name="claimId" value="@claim.Id" />
+                                                        <input type="hidden" name="isApproved" value="false" />
+                                                        <button type="submit" class="btn btn-danger btn-sm">
+                                                            <i class="fas fa-times me-1"></i>Reject
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-sm {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 0.35em 0.65em;
+    }
+</style>
