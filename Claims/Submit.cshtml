@@ -1,63 +1,112 @@
-﻿@model LecturerPayrollApp.Models.SubmitClaimViewModel
+﻿@model SubmitClaimViewModel
 
 @{
-    ViewData["Title"] = "Submit New Claim";
+    ViewData["Title"] = "Submit Claim";
 }
 
 <div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
+    <div class="row">
+        <div class="col-12">
             <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h2 class="h4 mb-0"><i class="fas fa-plus-circle me-2"></i>Submit New Claim</h2>
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-plus-circle me-2"></i>Submit New Claim
+                    </h2>
                 </div>
                 <div class="card-body">
-                    @if (TempData["Error"] != null)
-                    {
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    }
+                    <form method="post" asp-action="Submit" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
 
-                    <form method="post" enctype="multipart/form-data">
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="ClaimMonth" class="form-label">Claim Month *</label>
-                                <input type="month" class="form-control" id="ClaimMonth" name="ClaimMonth" required>
-                                <small class="form-text text-muted">Select the month you're claiming for</small>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="TotalAmount" class="form-label">Total Amount *</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" step="0.01" class="form-control" id="TotalAmount" name="TotalAmount" required>
+                            <!-- Left Column: Claim Information -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ClaimMonth" class="form-label"></label>
+                                    <input asp-for="ClaimMonth" class="form-control" type="month" />
+                                    <span asp-validation-for="ClaimMonth" class="text-danger"></span>
                                 </div>
-                                <small class="form-text text-muted">Enter the total claim amount</small>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="HoursWorked" class="form-label"></label>
+                                    <input asp-for="HoursWorked" id="HoursWorked" class="form-control" />
+                                    <span asp-validation-for="HoursWorked" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="HourlyRate" class="form-label"></label>
+                                    <input asp-for="HourlyRate" id="HourlyRate" class="form-control" />
+                                    <span asp-validation-for="HourlyRate" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Calculated Amount</label>
+                                    <input id="TotalAmount" class="form-control" readonly />
+                                    <small class="text-muted">This amount is calculated automatically</small>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="Description" class="form-label"></label>
+                                    <textarea asp-for="Description" class="form-control" rows="4"
+                                              placeholder="Describe the work performed..."></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Document Upload Section -->
+                            <div class="col-md-6">
+                                <!-- DOCUMENT UPLOAD SECTION -->
+                                <div class="card border-primary mb-4">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-paperclip me-2"></i>Supporting Documents
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3">
+                                            Upload supporting documents like timesheets, contracts, or receipts.
+                                            This helps coordinators process your claim faster.
+                                        </p>
+
+                                        <div id="documentUploads">
+                                            <!-- Document upload fields will be added here dynamically -->
+                                        </div>
+
+                                        <button type="button" id="addDocumentBtn" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-plus me-1"></i>Add Another Document
+                                        </button>
+
+                                        <!-- Upload Guidelines -->
+                                        <div class="alert alert-info mt-3">
+                                            <h6><i class="fas fa-info-circle me-2"></i>Upload Guidelines</h6>
+                                            <ul class="mb-0 small">
+                                                <li><strong>Supported formats:</strong> PDF, Word (.doc, .docx), Images (.jpg, .jpeg, .png), Text files</li>
+                                                <li><strong>Maximum file size:</strong> 10MB per document</li>
+                                                <li><strong>Recommended:</strong> Timesheets, contracts, approval letters, receipts</li>
+                                                <li>You can upload multiple documents for the same claim</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Policy Information -->
+                                <div class="alert alert-warning">
+                                    <h6><i class="fas fa-shield-alt me-2"></i>Policy Information</h6>
+                                    <p class="mb-0 small">
+                                        • <strong>Maximum 160 hours</strong> per month<br>
+                                        • <strong>Hourly rate:</strong> $15 - $200<br>
+                                        • Claims exceeding 160 hours will be flagged for review<br>
+                                        • All amounts are calculated automatically
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="Description" class="form-label">Description (Optional)</label>
-                            <textarea class="form-control" id="Description" name="Description" rows="3" placeholder="Add any additional notes about this claim..."></textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="Document" class="form-label">Supporting Document (Optional)</label>
-                            <input type="file" class="form-control" id="Document" name="Document" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                            <small class="form-text text-muted">Upload supporting documents (PDF, Word, Images)</small>
-                        </div>
-
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-paper-plane me-2"></i>Submit Claim
+                        <!-- Submit Buttons -->
+                        <div class="form-group mt-4 pt-3 border-top">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Claim & Documents
                             </button>
-                            <a href="/Claims/MyClaims" class="btn btn-outline-secondary">
-                                <i class="fas fa-list me-2"></i>View My Claims
-                            </a>
-                            <a href="/Claims/Dashboard" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-                            </a>
+                            <a href="@Url.Action("Dashboard")" class="btn btn-secondary btn-lg">Cancel</a>
                         </div>
                     </form>
                 </div>
@@ -65,3 +114,187 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function() {
+            const MAX_HOURS = 160;
+            const WARNING_HOURS = 140;
+            let documentCount = 0;
+
+            // Auto-calculation function
+            function calculateTotal() {
+                var hours = parseFloat($('#HoursWorked').val()) || 0;
+                var rate = parseFloat($('#HourlyRate').val()) || 0;
+                var total = hours * rate;
+                $('#TotalAmount').val('$' + total.toFixed(2));
+            }
+
+            // Policy check function
+            function checkHoursPolicy(hours) {
+                if (hours > MAX_HOURS) {
+                    return {
+                        type: 'error',
+                        message: `❌ EXCEEDS LIMIT: ${hours} hours exceeds maximum of ${MAX_HOURS} hours per month. This claim will be flagged for review.`,
+                        cssClass: 'text-danger fw-bold'
+                    };
+                } else if (hours > WARNING_HOURS) {
+                    return {
+                        type: 'warning',
+                        message: `⚠️ WARNING: ${hours} hours is approaching the ${MAX_HOURS}-hour limit.`,
+                        cssClass: 'text-warning'
+                    };
+                } else {
+                    return {
+                        type: 'success',
+                        message: `✅ WITHIN LIMIT: ${hours} hours is within policy limits.`,
+                        cssClass: 'text-success'
+                    };
+                }
+            }
+
+            function updateHoursPolicyDisplay() {
+                var hours = parseFloat($('#HoursWorked').val()) || 0;
+                var policyCheck = checkHoursPolicy(hours);
+
+                $('.hours-policy-message').remove();
+
+                var messageHtml = `<div class="hours-policy-message mt-2 ${policyCheck.cssClass}">
+                    <i class="fas fa-shield-alt me-2"></i>${policyCheck.message}
+                </div>`;
+
+                $('#HoursWorked').after(messageHtml);
+
+                $('#HoursWorked').removeClass('is-valid is-invalid border-warning');
+                if (policyCheck.type === 'error') {
+                    $('#HoursWorked').addClass('is-invalid');
+                } else if (policyCheck.type === 'warning') {
+                    $('#HoursWorked').addClass('border-warning');
+                } else {
+                    $('#HoursWorked').addClass('is-valid');
+                }
+            }
+
+            // Document upload functionality
+            function addDocumentField() {
+                documentCount++;
+                const documentHtml = `
+                    <div class="document-upload mb-3 p-3 border rounded" id="document-${documentCount}">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <label class="form-label">Document ${documentCount}</label>
+                                <input type="file" name="Documents" class="form-control document-file"
+                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt" required />
+                                <small class="text-muted">Select file to upload</small>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">Description (Optional)</label>
+                                <input type="text" name="DocumentDescriptions" class="form-control"
+                                       placeholder="e.g., Timesheet, Contract, Receipt" />
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100 remove-document"
+                                        data-doc-id="${documentCount}" title="Remove this document">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('#documentUploads').append(documentHtml);
+            }
+
+            // Remove document field
+            $(document).on('click', '.remove-document', function() {
+                const docId = $(this).data('doc-id');
+                $(`#document-${docId}`).remove();
+                // Renumber remaining documents
+                documentCount = 0;
+                $('.document-upload').each(function() {
+                    documentCount++;
+                    $(this).attr('id', `document-${documentCount}`);
+                    $(this).find('.remove-document').data('doc-id', documentCount);
+                    $(this).find('label').text(`Document ${documentCount}`);
+                });
+            });
+
+            // File size validation
+            $(document).on('change', '.document-file', function() {
+                var file = this.files[0];
+                if (file) {
+                    var fileSize = file.size / 1024 / 1024; // in MB
+                    if (fileSize > 10) {
+                        alert('File size exceeds 10MB. Please select a smaller file.');
+                        $(this).val('');
+                        $(this).removeAttr('required'); // Remove required attribute if file is invalid
+                    } else {
+                        $(this).attr('required', 'required'); // Add required attribute back
+                    }
+                }
+            });
+
+            // Add first document field by default
+            addDocumentField();
+
+            // Event handlers
+            $('#addDocumentBtn').click(function() {
+                addDocumentField();
+            });
+
+            $('#HoursWorked, #HourlyRate').on('input', function() {
+                calculateTotal();
+                updateHoursPolicyDisplay();
+            });
+
+            // Form submission validation
+            $('form').on('submit', function() {
+                let hasValidFiles = false;
+                $('.document-file').each(function() {
+                    if ($(this).val()) {
+                        hasValidFiles = true;
+                    }
+                });
+
+                if (!hasValidFiles) {
+                    if (!confirm('You haven\'t uploaded any documents. Are you sure you want to submit without supporting documents?')) {
+                        return false;
+                    }
+                }
+            });
+
+            // Initial calculations
+            calculateTotal();
+            updateHoursPolicyDisplay();
+        });
+    </script>
+
+    <style>
+        .document-upload {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff !important;
+        }
+
+        .document-upload:hover {
+            background-color: #e9ecef;
+        }
+
+        .hours-policy-message {
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        #addDocumentBtn {
+            transition: all 0.3s ease;
+        }
+
+        #addDocumentBtn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+}
