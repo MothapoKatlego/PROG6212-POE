@@ -1,0 +1,463 @@
+﻿@model IEnumerable<LecturerPayrollApp.Models.MonthlyClaim>
+@{
+    ViewData["Title"] = "Dashboard";
+    var userRole = Context.Session.GetString("Role");
+    var userName = Context.Session.GetString("FirstName");
+}
+
+<div class="container-fluid">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body py-4">
+                    <h1 class="h3 mb-2">@(userRole) Dashboard</h1>
+                    <p class="text-muted mb-0">Welcome to the Contract Monthly Claim System (CMCS).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Quick Actions -->
+    @if (userRole == "Lecturer")
+    {
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <a href="/Claims/Submit" class="btn btn-success btn-lg w-100 py-3">
+                    <i class="fas fa-plus-circle me-2"></i>Submit New Claim
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="/Claims/UploadDocument" class="btn btn-primary btn-lg w-100 py-3">
+                    <i class="fas fa-upload me-2"></i>Upload Document
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Claims -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="fas fa-history me-2"></i>Recent Claims</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.Any())
+                        {
+                            <div class="text-center py-4">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No claims submitted yet.</p>
+                                <a href="/Claims/Submit" class="btn btn-success">
+                                    <i class="fas fa-plus-circle me-2"></i>Submit Your First Claim
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Claim ID</th>
+                                            <th>Month</th>
+                                            <th>Amount</th>
+                                            <th>Submitted</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var claim in Model)
+                                        {
+                                            <tr>
+                                                <td>#@claim.Id</td>
+                                                <td>@claim.ClaimMonth.ToString("MMM yyyy")</td>
+                                                <td>$@claim.TotalAmount.ToString("N2")</td>
+                                                <td>@claim.SubmittedDate.ToString("dd MMM yyyy")</td>
+                                                <td>
+                                                    @{
+                                                        var statusClass = claim.Status.ToString() switch
+                                                        {
+                                                            "Submitted" => "bg-warning",
+                                                            "Approved" => "bg-success",
+                                                            "Rejected" => "bg-danger",
+                                                            "Completed" => "bg-info",
+                                                            _ => "bg-secondary"
+                                                        };
+                                                    }
+                                                    <span class="badge @statusClass">@claim.Status</span>
+                                                </td>
+                                                <td>
+                                                    <a href="/Claims/Details/@claim.Id" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-3">
+                                <a href="/Claims/MyClaims" class="btn btn-outline-primary">View All My Claims</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+@if (userRole == "Coordinator")
+{
+        <!-- Policy Alert Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Policy Flags Active
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-flag text-danger fa-2x me-3"></i>
+                                    <div>
+                                        <h4 class="mb-0 text-danger">@Model.Count(c => c.Exceeds160Hours())</h4>
+                                        <small class="text-muted">Claims exceed 160 hours</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-flag text-warning fa-2x me-3"></i>
+                                    <div>
+                                        <h4 class="mb-0 text-warning">@Model.Count(c => c.HoursWorked > 140 && c.HoursWorked <= 160)</h4>
+                                        <small class="text-muted">High hours warning</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="/Claims/ReviewClaims" class="btn btn-warning btn-lg w-100">
+                                    <i class="fas fa-clipboard-check me-2"></i>Review Flagged Claims
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rest of your coordinator dashboard... -->
+}
+    }
+    else if (userRole == "Manager")
+    {
+        <!-- Manager Dashboard -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3>@Model.Count()</h3>
+                        <p class="mb-0">Claims Pending Approval</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <a href="/Claims/ApproveClaims" class="btn btn-info btn-lg w-100 py-3 text-white">
+                    <i class="fas fa-check-circle me-2"></i>Approve Claims
+                </a>
+            </div>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                            <h4 class="text-muted">No Claims Pending Approval</h4>
+                            <p class="text-muted">All claims have been approved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="fas fa-check-circle me-2"></i>Claims for Approval</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Claim ID</th>
+                                            <th>Lecturer Name</th>
+                                            <th>Date Submitted</th>
+                                            <th>Total Amount</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var claim in Model)
+                                        {
+                                            <tr>
+                                                <td>#@claim.Id</td>
+                                                <td>@(claim.Lecturer?.FirstName ?? "Unknown") @(claim.Lecturer?.LastName ?? "Lecturer")</td>
+                                                <td>@claim.SubmittedDate.ToString("dd MMM yyyy")</td>
+                                                <td>$@claim.TotalAmount.ToString("N2")</td>
+                                                <td>
+                                                    <span class="badge bg-info">Pending Approval</span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group">
+                                                        <form method="post" action="/Claims/ApproveAsManager" class="d-inline">
+                                                            <input type="hidden" name="claimId" value="@claim.Id" />
+                                                            <input type="hidden" name="isApproved" value="true" />
+                                                            <button type="submit" class="btn btn-sm btn-success">
+                                                                <i class="fas fa-check me-1"></i>Approve
+                                                            </button>
+                                                        </form>
+                                                        <form method="post" action="/Claims/ApproveAsManager" class="d-inline">
+                                                            <input type="hidden" name="claimId" value="@claim.Id" />
+                                                            <input type="hidden" name="isApproved" value="false" />
+                                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                                <i class="fas fa-times me-1"></i>Reject
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- No Role Assigned -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+                        <h4 class="text-muted">No Role Assigned</h4>
+                        <p class="text-muted">Please contact administrator to assign you a role.</p>
+                        <a href="/Account/Logout" class="btn btn-primary">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (userRole == "HR")
+    {
+    <!-- HR Dashboard -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.Count(c => c.Status == ClaimStatus.Approved)</h3>
+                    <p class="mb-0">Approved Claims</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>@Model.Count(c => c.Status == ClaimStatus.Submitted)</h3>
+                    <p class="mb-0">Pending Claims</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.Select(c => c.LecturerId).Distinct().Count()</h3>
+                    <p class="mb-0">Active Lecturers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>$@Model.Where(c => c.Status == ClaimStatus.Approved).Sum(c => c.TotalAmount).ToString("N2")</h3>
+                    <p class="mb-0">Total Approved</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HR Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <a href="/HR/GenerateReport" class="btn btn-success btn-lg w-100 py-3">
+                <i class="fas fa-file-invoice-dollar me-2"></i>Generate Reports
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="/Claims/Index" class="btn btn-primary btn-lg w-100 py-3">
+                <i class="fas fa-list-alt me-2"></i>View All Claims
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="/Claims/ReviewClaims" class="btn btn-info btn-lg w-100 py-3 text-white">
+                <i class="fas fa-chart-bar me-2"></i>Analytics
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-history me-2"></i>Recent Claims Activity</h5>
+                </div>
+                <div class="card-body">
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No claims activity yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Claim ID</th>
+                                        <th>Lecturer Name</th>
+                                        <th>Month</th>
+                                        <th>Amount</th>
+                                        <th>Submitted</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var claim in Model.OrderByDescending(c => c.SubmittedDate).Take(10))
+                                    {
+                                        <tr>
+                                            <td>#@claim.Id</td>
+                                            <td>@(claim.Lecturer?.FirstName ?? "Unknown") @(claim.Lecturer?.LastName ?? "Lecturer")</td>
+                                            <td>@claim.ClaimMonth.ToString("MMM yyyy")</td>
+                                            <td>$@claim.TotalAmount.ToString("N2")</td>
+                                            <td>@claim.SubmittedDate.ToString("dd MMM yyyy")</td>
+                                            <td>
+                                                @{
+                                                    var statusClass = claim.Status.ToString() switch
+                                                    {
+                                                        "Submitted" => "bg-warning",
+                                                        "Approved" => "bg-success",
+                                                        "Rejected" => "bg-danger",
+                                                        "Completed" => "bg-info",
+                                                        _ => "bg-secondary"
+                                                    };
+                                                }
+                                                <span class="badge @statusClass">@claim.Status</span>
+                                            </td>
+                                            <td>
+                                                <a href="/Claims/Details/@claim.Id" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <a href="/Claims/Index" class="btn btn-outline-primary">View All Claims</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Processing Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-credit-card me-2"></i>Payment Processing</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Ready for Payment</h6>
+                            <p class="text-muted">Claims approved and ready for payment processing.</p>
+                            <div class="d-grid gap-2">
+                                <a href="/HR/GenerateReport?status=Approved" class="btn btn-success">
+                                    <i class="fas fa-file-export me-2"></i>Export Payment List
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Monthly Reports</h6>
+                            <p class="text-muted">Generate comprehensive monthly payment reports.</p>
+                            <div class="d-grid gap-2">
+                                <a href="/HR/GenerateReport" class="btn btn-primary">
+                                    <i class="fas fa-chart-pie me-2"></i>Generate Monthly Report
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .btn {
+        border-radius: 0.375rem;
+        font-weight: 500;
+    }
+
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        border-top: none;
+    }
+
+    .badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.8em;
+    }
+</style>

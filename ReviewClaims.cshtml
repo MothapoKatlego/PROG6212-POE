@@ -1,0 +1,259 @@
+﻿@model IEnumerable<MonthlyClaim>
+
+@{
+    ViewData["Title"] = "Review Claims - 160-Hour Policy Check";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>160-Hour Policy Enforcement
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-clock me-2"></i>Policy: Maximum 160 Hours Per Month</h6>
+                        <p class="mb-0">Claims exceeding 160 hours are automatically flagged and require manual review.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.Count()</h3>
+                    <p class="mb-0">Total Claims</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.Count(c => c.Exceeds160Hours())</h3>
+                    <p class="mb-0">Exceed 160 Hours</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>@Model.Count(c => c.HoursWorked > 140 && c.HoursWorked <= 160)</h3>
+                    <p class="mb-0">High Hours</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.Count(c => c.HoursWorked <= 140)</h3>
+                    <p class="mb-0">Within Limits</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Warning"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Warning"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+            <h4 class="text-muted">No Claims Pending Review</h4>
+            <p class="text-muted">All claims have been reviewed.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-flag me-2"></i>Flagged Claims
+                    <span class="badge bg-danger ms-2">@Model.Count(c => c.Exceeds160Hours()) Exceed Limit</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Claim ID</th>
+                                <th>Lecturer</th>
+                                <th>Hours</th>
+                                <th>Rate</th>
+                                <th>Amount</th>
+                                <th>160-Hour Status</th>
+                                <th>Policy Action</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var claim in Model)
+                            {
+                                var exceedsLimit = claim.Exceeds160Hours();
+                                var highHours = claim.HoursWorked > 140 && !exceedsLimit;
+
+                                <tr class="@(exceedsLimit ? "table-danger" : highHours ? "table-warning" : "")">
+                                    <td>#@claim.Id</td>
+                                    <td>@(claim.Lecturer?.FirstName ?? "N/A") @(claim.Lecturer?.LastName ?? "N/A")</td>
+                                    <td>
+                                        <span class="@(exceedsLimit ? "fw-bold text-danger" : highHours ? "fw-bold text-warning" : "")">
+                                            @claim.HoursWorked
+                                            @if (exceedsLimit)
+                                            {
+                                                <i class="fas fa-exclamation-triangle ms-1" title="Exceeds 160-hour limit"></i>
+                                            }
+                                            else if (highHours)
+                                            {
+                                                <i class="fas fa-exclamation-circle ms-1" title="High hours - approaching limit"></i>
+                                            }
+                                        </span>
+                                    </td>
+                                    <td>$@claim.HourlyRate.ToString("N2")</td>
+                                    <td>$@claim.TotalAmount.ToString("N2")</td>
+                                    <td>
+                                        @if (exceedsLimit)
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-ban me-1"></i>EXCEEDS LIMIT
+                                            </span>
+                                        }
+                                        else if (highHours)
+                                        {
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-clock me-1"></i>HIGH HOURS
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>WITHIN LIMIT
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (exceedsLimit)
+                                        {
+                                            <small class="text-danger">
+                                                <i class="fas fa-shield-alt me-1"></i>REQUIRES MANUAL REVIEW
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-success">
+                                                <i class="fas fa-bolt me-1"></i>CAN AUTO-APPROVE
+                                            </small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            @if (exceedsLimit)
+                                            {
+                                                <!-- Special override form for claims exceeding 160 hours -->
+                                                <form method="post" action="/Claims/ApproveAsCoordinator"
+                                                      onsubmit="return confirm('⚠️ WARNING: This claim exceeds 160 hours!\\n\\nHours: @claim.HoursWorked\\nLimit: 160 hours\\n\\nAre you sure you want to override the policy?');">
+                                                    <input type="hidden" name="claimId" value="@claim.Id" />
+                                                    <input type="hidden" name="isApproved" value="true" />
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-warning"
+                                                            title="Override 160-hour policy restriction">
+                                                        <i class="fas fa-unlock me-1"></i>Override
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <!-- Normal approval for claims within limits -->
+                                                <form method="post" action="/Claims/ApproveAsCoordinator">
+                                                    <input type="hidden" name="claimId" value="@claim.Id" />
+                                                    <input type="hidden" name="isApproved" value="true" />
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-success"
+                                                            onclick="return confirm('Approve claim #@claim.Id?')">
+                                                        <i class="fas fa-check me-1"></i>Approve
+                                                    </button>
+                                                </form>
+                                            }
+
+                                            <form method="post" action="/Claims/ApproveAsCoordinator">
+                                                <input type="hidden" name="claimId" value="@claim.Id" />
+                                                <input type="hidden" name="isApproved" value="false" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('Reject claim #@claim.Id?')">
+                                                    <i class="fas fa-times me-1"></i>Reject
+                                                </button>
+                                            </form>
+
+                                            <a href="/Claims/Details/@claim.Id" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i>Details
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+
+        // Highlight rows with policy violations
+        $(document).ready(function() {
+            $('tr.table-danger').hover(
+                function() {
+                    $(this).addClass('bg-danger bg-opacity-10');
+                },
+                function() {
+                    $(this).removeClass('bg-danger bg-opacity-10');
+                }
+            );
+
+            $('tr.table-warning').hover(
+                function() {
+                    $(this).addClass('bg-warning bg-opacity-10');
+                },
+                function() {
+                    $(this).removeClass('bg-warning bg-opacity-10');
+                }
+            );
+        });
+    </script>
+}
