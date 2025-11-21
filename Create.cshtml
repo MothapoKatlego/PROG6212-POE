@@ -1,0 +1,147 @@
+﻿@{
+    ViewData["Title"] = "Submit Claim";
+}
+
+<div class="container">
+    <h2>Submit New Monthly Claim</h2>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Claim Information</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" asp-action="Create">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="claimMonth" class="form-label">Claim Month *</label>
+                        <input type="month" class="form-control" id="claimMonth" name="claimMonth" required>
+                    </div>
+                </div>
+
+                <h5 class="mt-4 mb-3">Claim Items</h5>
+                <div id="claimItems">
+                    <div class="claim-item border p-3 mb-3">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label class="form-label">Work Date *</label>
+                                <input type="date" class="form-control work-date" name="workDates" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Hours *</label>
+                                <input type="number" class="form-control hours" name="hours" step="0.5" min="0.5" max="24" value="8" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Rate (R)</label>
+                                <input type="number" class="form-control rate" value="250" readonly>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Description</label>
+                                <input type="text" class="form-control description" name="descriptions" placeholder="e.g., Lecture hours">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Total (R)</label>
+                                <input type="text" class="form-control total" value="2000.00" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-outline-primary btn-sm" id="addItem">
+                    <i class="fas fa-plus"></i> Add Another Item
+                </button>
+
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="supportingDocs" class="form-label">Supporting Documents</label>
+                            <input type="file" class="form-control" id="supportingDocs" multiple
+                                   accept=".pdf,.docx,.xlsx,.jpg,.png">
+                            <small class="form-text text-muted">
+                                Maximum file size: 10MB. Allowed types: PDF, DOCX, XLSX, JPG, PNG
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Claim Summary</h6>
+                                <div class="d-flex justify-content-between">
+                                    <span>Total Hours:</span>
+                                    <span id="totalHours">8</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Total Amount:</span>
+                                    <span id="totalAmount">R 2,000.00</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Final Amount:</span>
+                                    <span id="finalAmount">R 2,000.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success me-2">
+                        <i class="fas fa-paper-plane"></i> Submit Claim
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add new claim item
+        document.getElementById('addItem').addEventListener('click', function() {
+            const newItem = document.querySelector('.claim-item').cloneNode(true);
+            newItem.querySelectorAll('input').forEach(input => {
+                if (!input.readOnly) input.value = '';
+                if (input.classList.contains('total')) input.value = '0.00';
+            });
+            document.getElementById('claimItems').appendChild(newItem);
+            updateTotals();
+        });
+
+        // Calculate totals when hours change
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('hours')) {
+                updateItemTotal(e.target);
+                updateTotals();
+            }
+        });
+
+        function updateItemTotal(input) {
+            const item = input.closest('.claim-item');
+            const hours = parseFloat(item.querySelector('.hours').value) || 0;
+            const rate = 250; // Fixed rate
+            const total = hours * rate;
+            item.querySelector('.total').value = total.toFixed(2);
+        }
+
+        function updateTotals() {
+            let totalHours = 0;
+            let totalAmount = 0;
+
+            document.querySelectorAll('.claim-item').forEach(item => {
+                const hours = parseFloat(item.querySelector('.hours').value) || 0;
+                const amount = parseFloat(item.querySelector('.total').value) || 0;
+                totalHours += hours;
+                totalAmount += amount;
+            });
+
+            document.getElementById('totalHours').textContent = totalHours;
+            document.getElementById('totalAmount').textContent = 'R ' + totalAmount.toFixed(2);
+            document.getElementById('finalAmount').textContent = 'R ' + totalAmount.toFixed(2);
+        }
+
+        // Initialize calculations
+        updateTotals();
+    </script>
+}
