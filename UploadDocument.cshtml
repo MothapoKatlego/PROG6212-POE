@@ -1,0 +1,131 @@
+﻿@model UploadDocumentViewModel
+
+@{
+    ViewData["Title"] = "Upload Document";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-upload me-2"></i>Upload Document
+                        @if (Model.Claim != null)
+                        {
+                            <small class="text-muted">- Claim #@Model.Claim.Id</small>
+                        }
+                    </h2>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form method="post" enctype="multipart/form-data" asp-action="UploadDocument">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="ClaimId" />
+
+                        @if (Model.Claim != null)
+                        {
+                            <div class="alert alert-info mb-4">
+                                <h6><i class="fas fa-info-circle me-2"></i>Claim Information</h6>
+                                <p class="mb-1"><strong>Claim ID:</strong> #@Model.Claim.Id</p>
+                                <p class="mb-1"><strong>Month:</strong> @Model.Claim.ClaimMonth.ToString("MMM yyyy")</p>
+                                <p class="mb-0"><strong>Amount:</strong> $@Model.Claim.TotalAmount.ToString("N2")</p>
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="DocumentType" class="form-label">Document Type</label>
+                                    <select asp-for="DocumentType" class="form-select" required>
+                                        <option value="">Select Document Type</option>
+                                        <option value="Timesheet">Timesheet</option>
+                                        <option value="Contract">Contract</option>
+                                        <option value="Invoice">Invoice</option>
+                                        <option value="Receipt">Receipt</option>
+                                        <option value="Approval">Approval Letter</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                    <span asp-validation-for="DocumentType" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="Description" class="form-label">Description (Optional)</label>
+                                    <textarea asp-for="Description" class="form-control" rows="3"
+                                              placeholder="Brief description of the document..."></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="File" class="form-label">Select File</label>
+                                    <input asp-for="File" class="form-control" type="file" required
+                                           accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt" />
+                                    <span asp-validation-for="File" class="text-danger"></span>
+                                    <small class="text-muted">
+                                        Allowed files: PDF, Word documents, Images (JPG, PNG), Text files. Max size: 10MB
+                                    </small>
+                                </div>
+
+                                <div class="alert alert-warning">
+                                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Upload Guidelines</h6>
+                                    <ul class="mb-0 small">
+                                        <li>Ensure documents are clear and readable</li>
+                                        <li>File names should be descriptive</li>
+                                        <li>Maximum file size: 10MB</li>
+                                        <li>Supported formats: PDF, DOC, DOCX, JPG, PNG, TXT</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-upload me-2"></i>Upload Document
+                            </button>
+                            <a href="@Url.Action("MyClaims")" class="btn btn-secondary btn-lg">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // File size validation
+        $(document).ready(function() {
+            $('input[type="file"]').change(function() {
+                var file = this.files[0];
+                if (file) {
+                    var fileSize = file.size / 1024 / 1024; // in MB
+                    if (fileSize > 10) {
+                        alert('File size exceeds 10MB. Please select a smaller file.');
+                        $(this).val('');
+                    }
+                }
+            });
+        });
+    </script>
+}
