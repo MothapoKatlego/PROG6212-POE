@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178 d17.12
+VisualStudioVersion = 17.14.36616.10
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LecturerPayrollApp", "LecturerPayrollApp.csproj", "{5763D100-91DD-49FE-B28E-BE249A03F501}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LecturerPayrollApp", "LecturerPayrollApp\LecturerPayrollApp.csproj", "{9B6BB9F3-1D6A-4C11-9D8A-394628865427}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,12 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5763D100-91DD-49FE-B28E-BE249A03F501}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5763D100-91DD-49FE-B28E-BE249A03F501}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5763D100-91DD-49FE-B28E-BE249A03F501}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5763D100-91DD-49FE-B28E-BE249A03F501}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B6BB9F3-1D6A-4C11-9D8A-394628865427}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B6BB9F3-1D6A-4C11-9D8A-394628865427}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B6BB9F3-1D6A-4C11-9D8A-394628865427}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B6BB9F3-1D6A-4C11-9D8A-394628865427}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1EC094D2-96D1-424E-82D4-7FC4041E8667}
 	EndGlobalSection
 EndGlobal

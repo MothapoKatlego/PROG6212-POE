@@ -1,0 +1,155 @@
+﻿@model IEnumerable<MonthlyClaim>
+
+@{
+    ViewData["Title"] = "Payment Report";
+    var totalAmount = Model.Sum(c => c.TotalAmount);
+    var approvedAmount = Model.Where(c => c.Status == ClaimStatus.Approved).Sum(c => c.TotalAmount);
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body py-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-2">Payment Report - @ViewBag.MonthName @ViewBag.Year</h1>
+                            <p class="text-muted mb-0">Generated on: @DateTime.Now.ToString("dd MMMM yyyy 'at' HH:mm")</p>
+                        </div>
+                        <div class="btn-group">
+                            <button onclick="window.print()" class="btn btn-primary">
+                                <i class="fas fa-print me-2"></i>Print
+                            </button>
+                            <a href="/HR/GenerateReport" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>New Report
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.Count()</h3>
+                    <p class="mb-0">Total Claims</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>@Model.Count(c => c.Status == ClaimStatus.Approved)</h3>
+                    <p class="mb-0">Approved</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>@Model.Count(c => c.Status == ClaimStatus.Submitted)</h3>
+                    <p class="mb-0">Pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>$@totalAmount.ToString("N2")</h3>
+                    <p class="mb-0">Total Amount</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Claims Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-list-alt me-2"></i>Claims Details</h5>
+                </div>
+                <div class="card-body">
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h4 class="text-muted">No Claims Found</h4>
+                            <p class="text-muted">No claims match the selected criteria.</p>
+                            <a href="/HR/GenerateReport" class="btn btn-primary">Generate New Report</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Claim ID</th>
+                                        <th>Lecturer Name</th>
+                                        <th>Claim Month</th>
+                                        <th>Total Amount</th>
+                                        <th>Status</th>
+                                        <th>Submitted Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var claim in Model.OrderBy(c => c.Lecturer?.LastName))
+                                    {
+                                        <tr>
+                                            <td>#@claim.Id</td>
+                                            <td>@(claim.Lecturer?.FirstName ?? "N/A") @(claim.Lecturer?.LastName ?? "N/A")</td>
+                                            <td>@claim.ClaimMonth.ToString("MMM yyyy")</td>
+                                            <td>$@claim.TotalAmount.ToString("N2")</td>
+                                            <td>
+                                                @{
+                                                    var statusClass = claim.Status.ToString() switch
+                                                    {
+                                                        "Submitted" => "bg-warning",
+                                                        "Approved" => "bg-success",
+                                                        "Rejected" => "bg-danger",
+                                                        "Completed" => "bg-info",
+                                                        _ => "bg-secondary"
+                                                    };
+                                                }
+                                                <span class="badge @statusClass">@claim.Status</span>
+                                            </td>
+                                            <td>@claim.SubmittedDate.ToString("dd MMM yyyy")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot class="table-info">
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Grand Total:</strong></td>
+                                        <td colspan="3"><strong>$@totalAmount.ToString("N2")</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        .btn, .card-header .btn-group {
+            display: none !important;
+        }
+
+        .card {
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+        }
+
+        .table-responsive {
+            overflow: visible !important;
+        }
+    }
+</style>
